@@ -5,6 +5,8 @@ pythonPlatform = "Linux"
 venv = ".venv"
 venvPath = "./"
 typeCheckingMode = "all"
+# See https://github.com/DetachHead/basedpyright/issues/1208
+reportUnannotatedClassAttribute = "none"
 
 [tool.ruff]
 target-version = "py313"

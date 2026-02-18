@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter the email and password you use for app.goliash.cz or client portal of your service provider.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "select_building": {
+        "title": "Select Building",
+        "description": "Select a building to integrate and configure update interval.",
+        "data": {
+          "building_id": "Building",
+          "update_interval": "Update interval (hours)"
+        },
+        "data_description": {
+          "update_interval": "Must be between 1 and 24 hours."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Authentication expired for {name}",
+        "description": "The Goliash integration needs to re-authenticate your account, the current password is no longer valid.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect (see logs for details)",
+      "invalid_auth": "Invalid email or password",
+      "invalid_building": "Invalid building selected",
+      "invalid_update_interval": "Update interval must be between 1 and 24 hours"
+    },
+    "abort": {
+      "cannot_connect": "Failed to connect\n\nError: {error}",
+      "invalid_auth": "Invalid email or password",
+      "invalid_data": "Received invalid data from Goliash API\n\nSee logs for details and report it at {issues_url}.",
+      "no_buildings": "No buildings found",
+      "reauth_successful": "Re-authentication was successful"
+    }
+  },
+  "device": {
+    "cold": {
+      "name": "Cold water meter"
+    },
+    "hot": {
+      "name": "Hot water meter"
+    },
+    "itn": {
+      "name": "Heat cost allocator"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "consumption_total": {
+        "name": "Water consumption total"
+      },
+      "cost_units_total": {
+        "name": "Heating cost units"
+      },
+      "last_measured": {
+        "name": "Last measured"
+      }
+    }
+  }
+}

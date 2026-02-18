@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Zadejte e-mail a heslo, které používáte pro app.goliash.cz nebo klientský portál vašeho poskytovatele služeb.",
+        "data": {
+          "username": "E-mail",
+          "password": "Heslo"
+        }
+      },
+      "select_building": {
+        "title": "Vyberte budovu",
+        "description": "Vyberte budovu pro integraci a nastavte interval aktualizace.",
+        "data": {
+          "building_id": "Budova",
+          "update_interval": "Interval aktualizace (hodiny)"
+        },
+        "data_description": {
+          "update_interval": "Musí být mezi 1 a 24 hodinami."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Platnost autentizace vypršela pro {name}",
+        "description": "Integrace Goliash potřebuje znovu autentizovat váš účet, aktuální heslo již není platné.",
+        "data": {
+          "username": "E-mail",
+          "password": "Heslo"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nepodařilo se připojit (pro podrobnosti viz logy)",
+      "invalid_auth": "Neplatný e-mail nebo heslo",
+      "invalid_building": "Neplatně vybraná budova",
+      "invalid_update_interval": "Interval aktualizace musí být mezi 1 a 24 hodinami"
+    },
+    "abort": {
+      "cannot_connect": "Nepodařilo se připojit\n\nChyba: {error}",
+      "invalid_auth": "Neplatný e-mail nebo heslo",
+      "invalid_data": "Přijata nevalidní data z Goliash API\n\nPro podrobnosti se podívejte do logů a nahlaste to na {issues_url}.",
+      "no_buildings": "Nenalezeny žádné budovy",
+      "reauth_successful": "Opětovná autentizace byla úspěšná"
+    }
+  },
+  "device": {
+    "cold": {
+      "name": "Měřič studené vody"
+    },
+    "hot": {
+      "name": "Měřič teplé vody"
+    },
+    "itn": {
+      "name": "Indikátor topných nákladů"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "consumption_total": {
+        "name": "Celková spotřeba vody"
+      },
+      "cost_units_total": {
+        "name": "Spotřební hodnota"
+      },
+      "last_measured": {
+        "name": "Naposled měřeno"
+      }
+    }
+  }
+}
