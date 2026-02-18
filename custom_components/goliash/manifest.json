@@ -1,0 +1,11 @@
+{
+  "domain": "goliash",
+  "name": "Goliash",
+  "codeowners": ["@jirutka"],
+  "config_flow": true,
+  "documentation": "https://github.com/jirutka/hass-goliash",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/jirutka/hass-goliash/issues",
+  "version": "0.0.0"
+}
