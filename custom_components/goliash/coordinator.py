@@ -1,20 +1,22 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: 2026 Jakub Jirutka <jakub@jirutka.cz>
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, timedelta
 import logging
 from typing import override
 
+from homeassistant.components.recorder.models import StatisticData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import GoliashApi, GoliashAuthError, GoliashInvalidDataError
 from .api.models import Device
 from .config_flow import GoliashConfigData
 from .const import DOMAIN
-
+from .utils import deduplicate_by
 
 # It must be in this file to avoid circular dependency.
 type GoliashConfigEntry = ConfigEntry[GoliashDataCoordinator]
@@ -65,3 +67,27 @@ class GoliashDataCoordinator(DataUpdateCoordinator[GoliashData]):
         except GoliashInvalidDataError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
         # Note: aiohttp.ClientError is already handled by DataUpdateCoordinator.
+
+    async def fetch_daily_statistics(
+        self,
+        device_id: int,
+        since_date: date,
+    ) -> list[StatisticData]:
+        """Fetch readings for device_id from API and convert them to daily statistics."""
+
+        _LOGGER.info(f"Fetching readings for device {device_id} since {since_date}")
+        readings = await self._api.get_device_readings(
+            device_id, since_date, date.today()
+        )
+        since_time = dt_util.start_of_local_day(since_date)
+        statistics = list(
+            deduplicate_by(
+                (
+                    StatisticData(start=dt_util.start_of_local_day(time), state=value)
+                    for (time, value) in sorted(readings, key=lambda x: x[0])
+                    if time >= since_time
+                ),
+                key=lambda x: x["start"],
+            )
+        )
+        return statistics

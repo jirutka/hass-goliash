@@ -3,7 +3,7 @@
 """Goliash API client."""
 
 import logging
-from datetime import date
+from datetime import date, datetime
 from typing import TypeVar
 
 import aiohttp
@@ -17,7 +17,6 @@ from .models import (
     Device,
     DeviceDetailResponse,
     LoginResponse,
-    Measurement,
     SubStructuresResponse,
     UserBuildingsResponse,
 )
@@ -95,10 +94,12 @@ class GoliashApi:
                 devices[device.id] = device
         return devices
 
-    async def get_device_measurements(
+    async def get_device_readings(
         self, device_id: int, from_date: date, to_date: date
-    ) -> list[Measurement]:
+    ) -> list[tuple[datetime, float]]:
         """Get device measurements (readings) for a specific device within a date range."""
+        assert from_date < to_date
+
         endpoint = _DEVICE_DETAIL_ENDPOINT.format(device_id=device_id)
         from_iso = from_date.isoformat()
         to_iso = to_date.isoformat()
@@ -107,7 +108,7 @@ class GoliashApi:
             f"{endpoint}?from={from_iso}&to={to_iso}&showMeasurements=true",
             DeviceDetailResponse,
         )
-        return model.graph_data.measures
+        return model.get_readings()
 
     async def _fetch_and_validate(
         self,

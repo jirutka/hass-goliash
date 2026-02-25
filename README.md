@@ -37,6 +37,8 @@ Home Assistant integration for [Goliash](https://app.goliash.cz) API.
 1. Enter your username (email) and password you use for https://app.goliash.cz or client portal of your service provider (e.g. VUSTE).
 1. Select the building you want to integrate and configure the following settings:
    - **Update interval**: How often to fetch data from the API (default: 8 hours, minimum: 1 hour).
+   - **Backfill statistics**: Enable importing historical daily readings since a specified date.
+   - **Backfill since**: The date from which to import historical statistics (must be at least one day in the past).
 1. The integration will automatically discover all meters in the selected building.
 
 

@@ -3,6 +3,8 @@
 from collections.abc import Mapping
 import dataclasses
 from dataclasses import dataclass
+from datetime import date
+from dateutil.relativedelta import relativedelta
 import logging
 from typing import Any, cast, override
 
@@ -10,11 +12,14 @@ import aiohttp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
+from homeassistant.util import dt
 import voluptuous as vol
 
 from .api import GoliashApi, GoliashAuthError, GoliashInvalidDataError
 from .api.models import Building
 from .const import (
+    CONF_BACKFILL_ENABLED,
+    CONF_BACKFILL_SINCE,
     CONF_BUILDING_ID,
     CONF_UPDATE_INTERVAL,
     DOMAIN,
@@ -46,6 +51,10 @@ class GoliashConfigData:
     """ID of the building for which the data is fetched."""
     update_interval: int
     """Update interval for the data update coordinator (in seconds)."""
+    backfill_enabled: bool
+    """Backfill statistics?"""
+    backfill_since: str
+    """Date in ISO 8601 from which to backfill statistics."""
 
     def asdict(self) -> dict[str, Any]:  # pyright: ignore[reportExplicitAny]
         return dataclasses.asdict(self)
@@ -77,7 +86,7 @@ class GoliashConfigFlow(ConfigFlow, domain=DOMAIN):
             # Test connection
             try:
                 await self._api.authenticate()
-                return await self.async_step_select_building()
+                return await self.async_step_settings()
             except GoliashAuthError:
                 errors["base"] = "invalid_auth"
             except aiohttp.ClientError:
@@ -94,10 +103,10 @@ class GoliashConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_select_building(
+    async def async_step_settings(
         self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
-        """Select a building and configure update interval."""
+        """Select a building, configure update interval and statistics backfilling."""
 
         if self._buildings is None and self._api:
             try:
@@ -119,23 +128,30 @@ class GoliashConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_create_entry(user_input)
 
-        return self._show_select_building_form({})
+        return self._show_settings_form({})
 
     async def _async_create_entry(
         self, user_input: dict[str, object]
     ) -> ConfigFlowResult:
         """Create config entry after validating user input."""
-        assert self._buildings is not None
         assert self._username is not None
         assert self._password is not None
+        assert self._buildings is not None
 
         building_id = int(cast(str, user_input[CONF_BUILDING_ID]))
         if not (building := self._buildings.get(building_id)):
-            return self._show_select_building_form(
-                {CONF_BUILDING_ID: "invalid_building"}
-            )
+            return self._show_settings_form({CONF_BUILDING_ID: "invalid_building"})
 
         update_interval = cast(int, user_input[CONF_UPDATE_INTERVAL]) * 3600
+
+        backfill_enabled = bool(user_input[CONF_BACKFILL_ENABLED])
+
+        backfill_since = dt.parse_date(cast(str, user_input[CONF_BACKFILL_SINCE] or ""))
+        day_ago = date.today() - relativedelta(days=1)
+        if backfill_since is None or backfill_since > day_ago:
+            return self._show_settings_form(
+                {CONF_BACKFILL_SINCE: "invalid_backfill_date"}
+            )
 
         return self.async_create_entry(
             title=building.name,
@@ -144,15 +160,18 @@ class GoliashConfigFlow(ConfigFlow, domain=DOMAIN):
                 password=self._password,
                 building_id=building_id,
                 update_interval=update_interval,
+                backfill_enabled=backfill_enabled,
+                backfill_since=str(backfill_since),
             ).asdict(),
         )
 
-    def _show_select_building_form(self, errors: dict[str, str]) -> ConfigFlowResult:
-        """Show the select building form with errors."""
+    def _show_settings_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         assert self._buildings is not None
 
+        one_year_ago = date.today() - relativedelta(years=1)
+
         return self.async_show_form(
-            step_id="select_building",
+            step_id="settings",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_BUILDING_ID): selector.SelectSelector(
@@ -177,6 +196,12 @@ class GoliashConfigFlow(ConfigFlow, domain=DOMAIN):
                         ),
                         vol.Range(min=int(UPDATE_INTERVAL_MIN.total_seconds() // 3600)),
                     ),
+                    vol.Required(
+                        CONF_BACKFILL_ENABLED, default=True
+                    ): selector.BooleanSelector(),
+                    vol.Required(
+                        CONF_BACKFILL_SINCE, default=one_year_ago.isoformat()
+                    ): selector.DateSelector(),
                 }
             ),
             errors=errors,

@@ -166,3 +166,7 @@ class DeviceDetailResponse(BaseModel):
     # - errors: []
     # - enable: list[str]
     # - consumption: float
+
+    def get_readings(self) -> list[tuple[datetime, float]]:
+        """Get readings as a list of tuples (date, value)."""
+        return [(x.date, x.value) for x in self.graph_data.measures]

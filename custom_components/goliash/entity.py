@@ -5,6 +5,7 @@ from typing import override
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -26,15 +27,17 @@ class GoliashDeviceEntity(CoordinatorEntity[GoliashDataCoordinator]):
         self,
         coordinator: GoliashDataCoordinator,
         device: Device,
+        entity_description: EntityDescription,
     ) -> None:
         super().__init__(coordinator)
 
-        if self.entity_description and not self.translation_key:
-            self._attr_translation_key = self.entity_description.key
+        if entity_description and not self.translation_key:
+            self._attr_translation_key = entity_description.key
 
         assert self.translation_key is not None, "translation_key is not set"
 
         self.device = device
+        self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.device_id,

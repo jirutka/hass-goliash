@@ -8,15 +8,18 @@
           "password": "Password"
         }
       },
-      "select_building": {
-        "title": "Select Building",
-        "description": "Select a building to integrate and configure update interval.",
+      "settings": {
         "data": {
           "building_id": "Building",
-          "update_interval": "Update interval (hours)"
+          "update_interval": "Update interval (hours)",
+          "backfill_enabled": "Backfill statistics",
+          "backfill_since": "Backfill since"
         },
         "data_description": {
-          "update_interval": "Must be between 1 and 24 hours."
+          "building_id": "If you have more buildings, add each one separately.",
+          "update_interval": "Must be between 1 and 24 hours.",
+          "backfill_enabled": "If enabled, once this setup is complete, daily readings since the “Backfill since” date will be imported from Goliash. Any missing statistics will also be backfilled each time the integration is loaded after being offline for more than a day.",
+          "backfill_since": "The date from which daily readings will be imported if backfill is enabled. It must be at least one day in the past."
         }
       },
       "reauth_confirm": {
@@ -31,6 +34,7 @@
     "error": {
       "cannot_connect": "Failed to connect (see logs for details)",
       "invalid_auth": "Invalid email or password",
+      "invalid_backfill_date": "Backfill since must be at least one day in the past",
       "invalid_building": "Invalid building selected",
       "invalid_update_interval": "Update interval must be between 1 and 24 hours"
     },

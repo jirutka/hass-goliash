@@ -24,6 +24,8 @@ UPDATE_INTERVAL_MIN: Final = timedelta(hours=1)
 # Config entry data keys.
 CONF_BUILDING_ID: Final = "building_id"
 CONF_UPDATE_INTERVAL: Final = "update_interval"
+CONF_BACKFILL_ENABLED: Final = "backfill_enabled"
+CONF_BACKFILL_SINCE: Final = "backfill_since"
 
 # Keys used in descriptions and unique_id.
 KEY_CONSUMPTION_TOTAL: Final = "consumption_total"

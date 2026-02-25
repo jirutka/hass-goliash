@@ -1,6 +1,7 @@
 {
   "domain": "goliash",
   "name": "Goliash",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@jirutka"],
   "config_flow": true,
   "documentation": "https://github.com/jirutka/hass-goliash",

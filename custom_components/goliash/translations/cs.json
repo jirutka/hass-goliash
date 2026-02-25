@@ -8,15 +8,18 @@
           "password": "Heslo"
         }
       },
-      "select_building": {
-        "title": "Vyberte budovu",
-        "description": "Vyberte budovu pro integraci a nastavte interval aktualizace.",
+      "settings": {
         "data": {
           "building_id": "Budova",
-          "update_interval": "Interval aktualizace (hodiny)"
+          "update_interval": "Interval aktualizace (hodiny)",
+          "backfill_enabled": "Importovat náměry",
+          "backfill_since": "Importovat od"
         },
         "data_description": {
-          "update_interval": "Musí být mezi 1 a 24 hodinami."
+          "building_id": "Pokud máte více budov, přidejte každou zvlášť.",
+          "update_interval": "Musí být mezi 1 a 24 hodinami.",
+          "backfill_enabled": "Pokud je zapnuto, po dokončení nastavení budou z Goliash API naimportovány denní náměry od data „Importovat od“.Chybějící statistiky budou také naimportovány pokaždé, když bude integrace načtena po více než jednom dnu offline.",
+          "backfill_since": "Datum, od kterého budou naimportovány denní náměry. Musí být alespoň jeden den v minulosti."
         }
       },
       "reauth_confirm": {
@@ -31,6 +34,7 @@
     "error": {
       "cannot_connect": "Nepodařilo se připojit (pro podrobnosti viz logy)",
       "invalid_auth": "Neplatný e-mail nebo heslo",
+      "invalid_backfill_date": "Importovat od musí být alespoň jeden den v minulosti",
       "invalid_building": "Neplatně vybraná budova",
       "invalid_update_interval": "Interval aktualizace musí být mezi 1 a 24 hodinami"
     },
