@@ -1,4 +1,5 @@
 # Goliash Integration
+<img src="https://raw.githubusercontent.com/jirutka/hass-goliash/master/custom_components/goliash/brand/logo.png" width="250px" align="right">
 
 [![GitHub Release][releases-shield]][releases]
 
