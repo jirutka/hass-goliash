@@ -3,10 +3,12 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 import logging
+from math import floor
 from typing import Callable, cast, override
 
 from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.core import StatisticMetaData
+from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_import_statistics
 from homeassistant.components.sensor import (
@@ -18,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.recorder import get_instance as get_recorder_instance
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import VolumeConverter
 
@@ -179,9 +182,32 @@ class GoliashStatisticSensor(GoliashBaseSensor):
             last_sum = stat.get("sum") or 0.0
 
         data = await self.coordinator.fetch_daily_statistics(self.device.id, since_date)
+        if not data:
+            return
         inject_cumulative_sum(data, last_sum)
 
         _LOGGER.warning(
-            f"{self.entity_id}: Backfilling daily statistics since {since_date} (last sum is {last_sum})"
+            f"{self.entity_id}: Backfilling daily {len(data)} statistics since {since_date} (last sum is {last_sum})"
         )
+        # XXX: Import a short-term statistic entry to prime the recorder with the cumulative sum.
+        #  This ensures that when Home Assistant's recorder automatically begins tracking this
+        #  entity's state, it will correctly use the cumulative sum rather than calculating a new
+        #  sum from individual state changes. This is a hack that uses an internal API, but I don't
+        #  know any better way.
+        last_stat = data[-1].copy()
+        time = datetime.today() - timedelta(minutes=10)
+        last_stat["start"] = time.replace(
+            minute=floor(time.minute / 5) * 5, second=0, microsecond=0
+        )
+        get_recorder_instance(self.hass).async_import_statistics(
+            self.statistic_metadata, [last_stat], StatisticsShortTerm
+        )
+
+        # Now import historical statistics.
+        # XXX: We use async_import_statistics() instead of async_add_external_statistics()
+        #  because these statistics belong to a specific sensor entity (statistic_id = entity_id).
+        #  The async_add_external_statistics() function does not allow statistic_id to be a
+        #  valid entity_id, so the statistics are not linked to the sensor. Even if we accept that
+        #  historical statistics are separate, HASS would still record statistics from state
+        #  changes, causing data duplication.
         async_import_statistics(self.hass, self.statistic_metadata, data)
