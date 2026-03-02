@@ -187,7 +187,7 @@ class GoliashStatisticSensor(GoliashBaseSensor):
         inject_cumulative_sum(data, last_sum)
 
         _LOGGER.warning(
-            f"{self.entity_id}: Backfilling daily {len(data)} statistics since {since_date} (last sum is {last_sum})"
+            f"{self.entity_id}: Backfilling {len(data)} daily statistics since {since_date} (last sum was {last_sum})"
         )
         # XXX: Import a short-term statistic entry to prime the recorder with the cumulative sum.
         #  This ensures that when Home Assistant's recorder automatically begins tracking this
