@@ -94,7 +94,7 @@ async def async_setup_entry(
 ) -> None:
     coordinator = entry.runtime_data
 
-    entities: list[GoliashStatisticSensor] = []
+    entities: list[GoliashBaseSensor] = []
     for device in coordinator.data.devices.values():
         # Create separate entity for each measurement type
         if device.measurement_type in _MEASUREMENT_SENSORS:
@@ -106,7 +106,7 @@ async def async_setup_entry(
                 )
             )
         entities.append(
-            GoliashStatisticSensor(
+            GoliashBaseSensor(
                 coordinator,
                 device,
                 _LAST_MEASURED_SENSOR,
