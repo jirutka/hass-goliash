@@ -95,19 +95,18 @@ class GoliashApi:
         return devices
 
     async def get_device_readings(
-        self, device_id: int, from_date: date, to_date: date
+        self, device_id: int, from_date: date, to_date: date | None = None
     ) -> list[tuple[datetime, float]]:
         """Get device measurements (readings) for a specific device within a date range."""
-        assert from_date < to_date
+        assert to_date is None or from_date < to_date
 
         endpoint = _DEVICE_DETAIL_ENDPOINT.format(device_id=device_id)
-        from_iso = from_date.isoformat()
-        to_iso = to_date.isoformat()
+        url = f"{endpoint}?from={from_date.isoformat()}&showMeasurements=true"
+        if to_date:
+            url += f"&to={to_date.isoformat()}"
 
-        model = await self._fetch_and_validate(
-            f"{endpoint}?from={from_iso}&to={to_iso}&showMeasurements=true",
-            DeviceDetailResponse,
-        )
+        model = await self._fetch_and_validate(url, DeviceDetailResponse)
+
         return model.get_readings()
 
     async def _fetch_and_validate(

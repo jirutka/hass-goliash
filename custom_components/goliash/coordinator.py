@@ -76,9 +76,7 @@ class GoliashDataCoordinator(DataUpdateCoordinator[GoliashData]):
         """Fetch readings for device_id from API and convert them to daily statistics."""
 
         _LOGGER.info(f"Fetching readings for device {device_id} since {since_date}")
-        readings = await self._api.get_device_readings(
-            device_id, since_date, date.today()
-        )
+        readings = await self._api.get_device_readings(device_id, since_date)
         since_time = dt_util.start_of_local_day(since_date)
         statistics = list(
             deduplicate_by(
