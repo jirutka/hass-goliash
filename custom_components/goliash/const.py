@@ -16,7 +16,7 @@ GOLIASH_API_BASE_URL: Final = "https://api.goliash.cz/api"
 HTTP_TIMEOUT: Final = ClientTimeout(total=10)
 """Timeout in seconds for HTTP requests."""
 
-UPDATE_INTERVAL_DEFAULT: Final = timedelta(hours=8)
+UPDATE_INTERVAL_DEFAULT: Final = timedelta(hours=3)
 """The default data update interval."""
 UPDATE_INTERVAL_MIN: Final = timedelta(hours=1)
 """The minimal data update interval the user can select in the configuration flow."""
