@@ -33,4 +33,6 @@ jobs:
         uses: hacs/action@main
         with:
           category: integration
+          # home-assistant/brands doesn't accept any new brands for custom integrations
+          # https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api
           ignore: brands
