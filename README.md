@@ -85,6 +85,14 @@ to 2 AM and reports can be delayed).
 > Always use `_total` sensors for the Energy dashboard and anything where accuracy matters; `_daily` sensors accumulate error over time when summed, as they are derived from differences between readings rather than the meter's actual cumulative value.
 
 
+## Screenshots
+
+<img src="https://raw.githubusercontent.com/jirutka/hass-goliash/master/images/screenshot-water-sensors.png" width="324px" align="left" alt="Screenshot of the water sensors">
+<img src="https://raw.githubusercontent.com/jirutka/hass-goliash/master/images/screenshot-hca-sensors.png" width="324px" alt="Screenshot of the HCA sensors">
+
+<img src="https://raw.githubusercontent.com/jirutka/hass-goliash/master/images/screenshot-water-energy.png" width="615px" alt="Screenshot of the Energy dashboard with water consumption">
+
+
 ## License
 
 This project is licensed under the [MIT License].
