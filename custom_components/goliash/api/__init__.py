@@ -2,7 +2,6 @@
 # SPDX-FileCopyrightText: 2026 Jakub Jirutka <jakub@jirutka.cz>
 """Goliash API client."""
 
-from datetime import datetime
 import logging
 from datetime import date
 from typing import TypeVar
@@ -95,20 +94,27 @@ class GoliashApi:
                 devices[device.id] = device
         return devices
 
-    async def get_device_readings(
-        self, device_id: int, from_date: date, to_date: date | None = None
-    ) -> list[tuple[datetime, float]]:
-        """Get device measurements (readings) for a specific device within a date range."""
+    async def get_device_detail(
+        self,
+        device_id: int,
+        from_date: date,
+        to_date: date | None = None,
+        cumulative: bool = True,
+    ) -> DeviceDetailResponse:
+        """Get device measurements (readings) for a specific device within a date(time) range.
+
+        If `cumulative` is True, the readings contain total cumulative consumption instead of daily
+        consumption.
+        """
+        assert to_date is None or type(from_date) is type(to_date)
         assert to_date is None or from_date < to_date
 
         endpoint = _DEVICE_DETAIL_ENDPOINT.format(device_id=device_id)
-        url = f"{endpoint}?from={from_date.isoformat()}&showMeasurements=true"
+        url = f"{endpoint}?from={from_date.isoformat()}&showMeasurements={str(cumulative).lower()}"
         if to_date:
             url += f"&to={to_date.isoformat()}"
 
-        model = await self._fetch_and_validate(url, DeviceDetailResponse)
-
-        return model.get_readings()
+        return await self._fetch_and_validate(url, DeviceDetailResponse)
 
     async def _fetch_and_validate(
         self,

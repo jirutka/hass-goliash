@@ -38,12 +38,18 @@ class Device(BaseModel):
 
     @property
     def last_value(self) -> float:
-        """Return the last measured value."""
+        """Return the last measured value.
+
+        WARNING: This is sometimes delayed be several hours!
+        """
         return self.lastState.value
 
     @property
     def last_measured(self) -> datetime:
-        """Return the last measurement timestamp."""
+        """Return the last measurement timestamp.
+
+        WARNING: This is sometimes delayed be several hours!
+        """
         return self.lastState.last_measurement
 
     @property
@@ -146,6 +152,7 @@ class Measurement(BaseModel):
 class DeviceGraphData(BaseModel):
     """Represents graph data (from /api/device/detail/{id})."""
 
+    current_state: float = Field(alias="currentState")
     measures: list[Measurement]
 
     # Omitted properties:
