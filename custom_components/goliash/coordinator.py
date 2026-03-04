@@ -80,8 +80,10 @@ class GoliashDataCoordinator(DataUpdateCoordinator[GoliashData]):
         statistics = list(
             deduplicate_by(
                 (
-                    StatisticData(start=dt_util.start_of_local_day(time), state=value)
-                    for (time, value) in device.get_readings()
+                    StatisticData(
+                        start=dt_util.start_of_local_day(r.date), state=r.value
+                    )
+                    for r in device.readings
                 ),
                 key=lambda x: x["start"],
             )

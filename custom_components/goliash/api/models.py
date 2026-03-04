@@ -142,8 +142,8 @@ class UserBuildingsResponse(BaseModel):
 ########## /api/device/detail/{id} ##########
 
 
-class Measurement(BaseModel):
-    """Represents a single measurement (from /api/device/detail/{id})."""
+class Reading(BaseModel):
+    """Represents a single reading (measurement) (from /api/device/detail/{id})."""
 
     date: datetime
     value: float
@@ -153,7 +153,7 @@ class DeviceGraphData(BaseModel):
     """Represents graph data (from /api/device/detail/{id})."""
 
     current_state: float = Field(alias="currentState")
-    measures: list[Measurement]
+    measures: list[Reading]
 
     # Omitted properties:
     # - type: "elevation"
@@ -174,6 +174,8 @@ class DeviceDetailResponse(BaseModel):
     # - enable: list[str]
     # - consumption: float
 
-    def get_readings(self) -> list[tuple[datetime, float]]:
-        """Get readings as a list of tuples (date, value) sorted by date."""
-        return [(x.date, x.value) for x in self.graph_data.measures]
+    @property
+    def readings(self) -> list[Reading]:
+        """Return readings sorted by date."""
+        # API returns measures already sorted.
+        return self.graph_data.measures
