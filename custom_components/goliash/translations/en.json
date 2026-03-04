@@ -60,16 +60,16 @@
   "entity": {
     "sensor": {
       "consumption_total": {
-        "name": "Water consumption total"
+        "name": "Total water consumption"
       },
       "consumption_daily": {
-        "name": "Water consumption daily"
+        "name": "Daily water consumption"
       },
       "cost_units_total": {
-        "name": "Heating cost units total"
+        "name": "Total heating cost units"
       },
       "cost_units_daily": {
-        "name": "Heating cost units daily"
+        "name": "Daily heating cost units"
       },
       "last_measured": {
         "name": "Last measured"
