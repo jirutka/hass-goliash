@@ -9,6 +9,7 @@
         }
       },
       "settings": {
+        "description": "**IMPORTANT:** To avoid the risk of concurrent statistics backfill and automatic statistics recording, it’s recommended that you do not click **Submit** at times divisible by five minutes (0, 5, 10, 15, etc.) ±30 seconds!",
         "data": {
           "building_id": "Building",
           "update_interval": "Update interval (hours)",
@@ -18,7 +19,7 @@
         "data_description": {
           "building_id": "If you have more buildings, add each one separately.",
           "update_interval": "Must be between 1 and 24 hours.",
-          "backfill_enabled": "If enabled, once this setup is complete, daily readings since the “Backfill since” date will be imported from Goliash. Any missing statistics will also be backfilled each time the integration is loaded after being offline for more than a day.",
+          "backfill_enabled": "If enabled, once you click **Submit**, daily readings since the “Backfill since” date will be imported from Goliash. Any missing statistics will also be backfilled each time the integration is loaded after being offline for more than a day.",
           "backfill_since": "The date from which daily readings will be imported if backfill is enabled. It must be at least one day in the past."
         }
       },

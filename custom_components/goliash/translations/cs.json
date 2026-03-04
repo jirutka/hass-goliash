@@ -9,6 +9,7 @@
         }
       },
       "settings": {
+        "description": "**DŮLEŽITÉ:** Abyste se vyhnuli riziku souběžného importu statistik a automatického zaznamenávání statistik, doporučujeme neklikat na tlačítko **Odeslat** v časech dělitelných pěti minutami (0, 5, 10, 15 atd.) ±30 sekund!",
         "data": {
           "building_id": "Budova",
           "update_interval": "Interval aktualizace (hodiny)",
@@ -18,7 +19,7 @@
         "data_description": {
           "building_id": "Pokud máte více budov, přidejte každou zvlášť.",
           "update_interval": "Musí být mezi 1 a 24 hodinami.",
-          "backfill_enabled": "Pokud je zapnuto, po dokončení nastavení budou z Goliash API naimportovány denní náměry od data „Importovat od“.Chybějící statistiky budou také naimportovány pokaždé, když bude integrace načtena po více než jednom dnu offline.",
+          "backfill_enabled": "Pokud je zapnuto, jakmile kliknete na **Odeslat**, budou z Goliash API naimportovány denní náměry od data „Importovat od“.Chybějící statistiky budou také naimportovány pokaždé, když bude integrace načtena po více než jednom dnu offline.",
           "backfill_since": "Datum, od kterého budou naimportovány denní náměry. Musí být alespoň jeden den v minulosti."
         }
       },
