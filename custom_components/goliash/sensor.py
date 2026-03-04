@@ -24,7 +24,6 @@ from homeassistant.helpers.recorder import get_instance as get_recorder_instance
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import VolumeConverter
 
-from .api.models import Device
 from .const import (
     KEY_CONST_UNITS_TOTAL,
     KEY_CONSUMPTION_TOTAL,
@@ -33,7 +32,7 @@ from .const import (
     MEASUREMENT_TYPE_HOT_WATER,
     MEASUREMENT_TYPE_HEATING,
 )
-from .coordinator import GoliashConfigEntry
+from .coordinator import ReadingData, GoliashConfigEntry
 from .entity import GoliashDeviceEntity
 from .utils import datetime_fromtimestamp, get_last_statistic, inject_cumulative_sum
 
@@ -42,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class GoliashSensorEntityDescription(SensorEntityDescription):
-    value_fn: Callable[[Device], StateType | date | datetime]
+    value_fn: Callable[[ReadingData], StateType | date | datetime]
     # Fields from StatisticMetaData.
     mean_type: StatisticMeanType = StatisticMeanType.NONE
     has_sum: bool = True
@@ -58,7 +57,7 @@ _MEASUREMENT_SENSORS = {
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         unit_class=VolumeConverter.UNIT_CLASS,
-        value_fn=lambda dev: dev.last_value,
+        value_fn=lambda data: data.cumulative_total,
     ),
     MEASUREMENT_TYPE_COLD_WATER: GoliashSensorEntityDescription(
         key=KEY_CONSUMPTION_TOTAL,
@@ -68,7 +67,7 @@ _MEASUREMENT_SENSORS = {
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         unit_class=VolumeConverter.UNIT_CLASS,
-        value_fn=lambda dev: dev.last_value,
+        value_fn=lambda data: data.cumulative_total,
     ),
     MEASUREMENT_TYPE_HEATING: GoliashSensorEntityDescription(
         key=KEY_CONST_UNITS_TOTAL,
@@ -76,7 +75,7 @@ _MEASUREMENT_SENSORS = {
         suggested_display_precision=0,
         state_class=SensorStateClass.TOTAL_INCREASING,
         unit_class="unitless",
-        value_fn=lambda dev: dev.last_value,
+        value_fn=lambda data: data.cumulative_total,
     ),
 }
 
@@ -86,7 +85,7 @@ _LAST_MEASURED_SENSOR = GoliashSensorEntityDescription(
     device_class=SensorDeviceClass.TIMESTAMP,
     entity_category=EntityCategory.DIAGNOSTIC,
     native_unit_of_measurement=None,
-    value_fn=lambda dev: dev.last_measured,
+    value_fn=lambda data: data.last_measured,
 )
 
 
@@ -98,7 +97,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     entities: list[GoliashBaseSensor] = []
-    for device in coordinator.data.devices.values():
+    for device in coordinator.data.devices:
         # Create separate entity for each measurement type
         if device.measurement_type in _MEASUREMENT_SENSORS:
             entities.append(
@@ -128,15 +127,15 @@ class GoliashBaseSensor(GoliashDeviceEntity, SensorEntity):
     def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
         return (
             self.coordinator.last_update_success
-            and self.device.id in self.coordinator.data.devices
+            and self.device.id in self.coordinator.data.readings
         )
 
     @override
     def _handle_coordinator_update(self) -> None:
         description = cast(GoliashSensorEntityDescription, self.entity_description)
 
-        if device := self.coordinator.data.devices.get(self.device.id):
-            self._attr_native_value = description.value_fn(device)
+        if data := self.coordinator.data.readings.get(self.device.id):
+            self._attr_native_value = description.value_fn(data)
         return super()._handle_coordinator_update()
 
 

@@ -5,6 +5,23 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
 
+
+class BaseDevice(BaseModel):
+    """Represents a meter device."""
+
+    device_id: str = Field(alias="deviceId")
+    """Alphanumerical ID of the device (e.g. itn-04b648fc50191234)."""
+
+    measurement_type: str = Field(alias="measurementTypeString")
+    manufacturer: dict[str, str] | None
+
+    @property
+    def manufacturer_name(self) -> str | None:
+        """Return the manufacturer name."""
+        if self.manufacturer is not None:
+            return self.manufacturer.get("name")
+
+
 ########## /api/login_check ##########
 
 
@@ -27,41 +44,18 @@ class LastState(BaseModel):
     # - data: dict[str, str] (contains only "rssi")
 
 
-class Device(BaseModel):
+class Device(BaseDevice):
     """Represents a meter device (from /api/structure/sub-structures/{id})."""
 
     id: int
-    device_id: str = Field(alias="deviceId")
-    measurement_type: str = Field(alias="measurementTypeString")
-    lastState: LastState = Field(alias="lastState")
-    manufacturer: dict[str, str] | None
+    """Numerical ID of the device."""
 
-    @property
-    def last_value(self) -> float:
-        """Return the last measured value.
+    # Omitted properties:
+    # - lastState: { value, lastMeasurement, errorState, data }
 
-        WARNING: This is sometimes delayed be several hours!
-        """
-        return self.lastState.value
-
-    @property
-    def last_measured(self) -> datetime:
-        """Return the last measurement timestamp.
-
-        WARNING: This is sometimes delayed be several hours!
-        """
-        return self.lastState.last_measurement
-
-    @property
-    def error_state(self) -> str | None:
-        if state := self.lastState.error_state:
-            return str(state)
-
-    @property
-    def manufacturer_name(self) -> str | None:
-        """Return the manufacturer name."""
-        if self.manufacturer is not None:
-            return self.manufacturer.get("name")
+    # NOTE: lastState in this representation is sometimes outdated (e.g. hot water
+    #  reporting at 2 AM is okay, cold water reporting at 4 AM is refreshed in the
+    #  afternoon). That's why we don't use it.
 
 
 class Flat(BaseModel):
@@ -157,7 +151,6 @@ class DeviceGraphData(BaseModel):
 
     # Omitted properties:
     # - type: "elevation"
-    # - currentState: float
     # - dataFrom: datetime
     # - dataTo: datetime
     # - backflow_detected: bool
@@ -166,13 +159,18 @@ class DeviceGraphData(BaseModel):
 class DeviceDetailResponse(BaseModel):
     """Response from /api/device/detail/{id} endpoint."""
 
+    device: BaseDevice
     graph_data: DeviceGraphData = Field(alias="graphData")
 
     # Omitted properties:
-    # - device: { deviceId, manufacturer, measurementTypeString }
     # - errors: []
     # - enable: list[str]
     # - consumption: float
+
+    @property
+    def last_total(self) -> float:
+        """Return the last cumulative total consumption in the requested period."""
+        return self.graph_data.current_state
 
     @property
     def readings(self) -> list[Reading]:

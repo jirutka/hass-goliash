@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: 2026 Jakub Jirutka <jakub@jirutka.cz>
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from typing import override
 
@@ -25,8 +25,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
+class ReadingData:
+    cumulative_total: float
+    last_measured: datetime | None
+
+
+@dataclass
 class GoliashData:
-    devices: dict[int, Device]
+    devices: list[Device]
+    readings: dict[int, ReadingData]
+    """Readings per device ID."""
 
 
 class GoliashDataCoordinator(DataUpdateCoordinator[GoliashData]):
@@ -50,23 +58,54 @@ class GoliashDataCoordinator(DataUpdateCoordinator[GoliashData]):
         )
 
     @property
-    def config(self):
+    def config(self) -> GoliashConfigData:
         return self._config
 
     @override
-    async def _async_update_data(self) -> GoliashData:
-        """Fetch data from the API."""
+    async def async_config_entry_first_refresh(self) -> None:
+        """Refresh data for the first time when a config entry is setup."""
         try:
             await self._api.authenticate()
             devices = await self._api.get_devices(self._config.building_id)
-
-            return GoliashData(devices=devices)
+            readings = {
+                dev.id: await self._fetch_last_reading(dev.id) for dev in devices
+            }
+            self.data = GoliashData(devices=devices, readings=readings)
 
         except GoliashAuthError as err:
             raise ConfigEntryAuthFailed from err
         except GoliashInvalidDataError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
         # Note: aiohttp.ClientError is already handled by DataUpdateCoordinator.
+
+    @override
+    async def _async_update_data(self) -> GoliashData:
+        """Fetch data from the API."""
+        # Device IDs from the active entities. This is used to avoid updating
+        # data for devices that are disabled.
+        device_ids = set[int](self.async_contexts())
+
+        try:
+            await self._api.authenticate()
+            readings = {id: await self._fetch_last_reading(id) for id in device_ids}
+
+            return GoliashData(devices=self.data.devices, readings=readings)
+
+        except GoliashAuthError as err:
+            raise ConfigEntryAuthFailed from err
+        except GoliashInvalidDataError as err:
+            raise UpdateFailed(f"Error fetching data: {err}") from err
+        # Note: aiohttp.ClientError is already handled by DataUpdateCoordinator.
+
+    async def _fetch_last_reading(self, device_id: int) -> ReadingData:
+        since_date = date.today() - timedelta(days=7)
+
+        device = await self._api.get_device_detail(device_id, since_date)
+        last_measured = device.readings[-1].date if len(device.readings) > 0 else None
+
+        return ReadingData(
+            cumulative_total=device.last_total, last_measured=last_measured
+        )
 
     async def fetch_daily_statistics(
         self,

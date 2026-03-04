@@ -83,15 +83,15 @@ class GoliashApi:
         )
         return {ub.structure.id: ub.structure for ub in model.buildings}
 
-    async def get_devices(self, building_id: int) -> dict[int, Device]:
+    async def get_devices(self, building_id: int) -> list[Device]:
         """Get devices for a specific building."""
         endpoint = _SUBSTRUCTURES_ENDPOINT.format(building_id=building_id)
         model = await self._fetch_and_validate(endpoint, SubStructuresResponse)
         # Extract all devices from all structures (flats)
-        devices: dict[int, Device] = {}
+        devices: list[Device] = []
         for structure in model.structures:
             for device in structure.structure.devices:
-                devices[device.id] = device
+                devices.append(device)
         return devices
 
     async def get_device_detail(

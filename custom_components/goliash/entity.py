@@ -29,7 +29,7 @@ class GoliashDeviceEntity(CoordinatorEntity[GoliashDataCoordinator]):
         device: Device,
         entity_description: EntityDescription,
     ) -> None:
-        super().__init__(coordinator)
+        super().__init__(coordinator, device.id)
 
         if entity_description and not self.translation_key:
             self._attr_translation_key = entity_description.key
