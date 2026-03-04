@@ -234,7 +234,7 @@ class AbstractGoliashStatisticSensor(GoliashBaseSensor, ABC):
         #  sum from individual state changes. This is a hack that uses an internal API, but I don't
         #  know any better way.
         last_stat = stats[-1].copy()
-        time = datetime.today() - timedelta(minutes=10)
+        time = datetime.now() - timedelta(minutes=10)
         last_stat["start"] = time.replace(
             minute=floor(time.minute / 5) * 5, second=0, microsecond=0
         )
