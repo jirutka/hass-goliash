@@ -2,8 +2,9 @@
 # SPDX-FileCopyrightText: 2026 Jakub Jirutka <jakub@jirutka.cz>
 """Goliash API client."""
 
+from datetime import datetime
 import logging
-from datetime import date, datetime
+from datetime import date
 from typing import TypeVar
 
 import aiohttp

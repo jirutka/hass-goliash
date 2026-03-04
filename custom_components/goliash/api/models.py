@@ -168,5 +168,5 @@ class DeviceDetailResponse(BaseModel):
     # - consumption: float
 
     def get_readings(self) -> list[tuple[datetime, float]]:
-        """Get readings as a list of tuples (date, value)."""
+        """Get readings as a list of tuples (date, value) sorted by date."""
         return [(x.date, x.value) for x in self.graph_data.measures]
