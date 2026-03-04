@@ -27,7 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass
 class ReadingData:
     cumulative_total: float
+    """Total consumption since the last reset."""
+    daily_consumption: float
+    """Consumption in the last day (between two readings, i.e. not since midnight)."""
     last_measured: datetime | None
+    """When the device send the last reading."""
 
 
 @dataclass
@@ -100,22 +104,32 @@ class GoliashDataCoordinator(DataUpdateCoordinator[GoliashData]):
     async def _fetch_last_reading(self, device_id: int) -> ReadingData:
         since_date = date.today() - timedelta(days=7)
 
-        device = await self._api.get_device_detail(device_id, since_date)
-        last_measured = device.readings[-1].date if len(device.readings) > 0 else None
+        device = await self._api.get_device_detail(
+            device_id, since_date, cumulative=False
+        )
+        if len(device.readings) > 0:
+            last_reading = device.readings[-1]
+            daily = last_reading.value
+            last_measured = last_reading.date
+        else:
+            daily = 0
+            last_measured = None
 
         return ReadingData(
-            cumulative_total=device.last_total, last_measured=last_measured
+            cumulative_total=device.last_total,
+            daily_consumption=daily,
+            last_measured=last_measured,
         )
 
     async def fetch_daily_statistics(
-        self,
-        device_id: int,
-        since_date: date,
+        self, device_id: int, since_date: date, cumulative: bool
     ) -> list[StatisticData]:
         """Fetch readings for device_id from API and convert them to daily statistics."""
 
         _LOGGER.info(f"Fetching readings for device {device_id} since {since_date}")
-        device = await self._api.get_device_detail(device_id, since_date)
+        device = await self._api.get_device_detail(
+            device_id, since_date, cumulative=cumulative
+        )
         statistics = list(
             deduplicate_by(
                 (

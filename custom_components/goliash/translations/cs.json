@@ -62,8 +62,14 @@
       "consumption_total": {
         "name": "Celková spotřeba vody"
       },
+      "consumption_daily": {
+        "name": "Denní spotřeba vody"
+      },
       "cost_units_total": {
-        "name": "Spotřební hodnota"
+        "name": "Celková spotřební hodnota"
+      },
+      "cost_units_daily": {
+        "name": "Denní spotřební hodnota"
       },
       "last_measured": {
         "name": "Naposled měřeno"

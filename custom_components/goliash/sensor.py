@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MIT
 # SPDX-FileCopyrightText: 2026 Jakub Jirutka <jakub@jirutka.cz>
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 import logging
@@ -7,7 +8,7 @@ from math import floor
 from typing import Callable, cast, override
 
 from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
-from homeassistant.components.recorder.core import StatisticMetaData
+from homeassistant.components.recorder.core import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_import_statistics
@@ -27,6 +28,8 @@ from homeassistant.util.unit_system import VolumeConverter
 from .const import (
     KEY_COST_UNITS_TOTAL,
     KEY_CONSUMPTION_TOTAL,
+    KEY_CONSUMPTION_DAILY,
+    KEY_COST_UNITS_DAILY,
     KEY_LAST_MEASURED,
     MEASUREMENT_TYPE_COLD_WATER,
     MEASUREMENT_TYPE_HOT_WATER,
@@ -48,7 +51,7 @@ class GoliashSensorEntityDescription(SensorEntityDescription):
     unit_class: str | None = None
 
 
-_MEASUREMENT_SENSORS = {
+_TOTAL_CONSUMPTION_SENSORS = {
     MEASUREMENT_TYPE_HOT_WATER: GoliashSensorEntityDescription(
         key=KEY_CONSUMPTION_TOTAL,
         icon="mdi:water-thermometer",
@@ -79,6 +82,39 @@ _MEASUREMENT_SENSORS = {
     ),
 }
 
+_DAILY_CONSUMPTION_SENSORS = {
+    MEASUREMENT_TYPE_HOT_WATER: GoliashSensorEntityDescription(
+        key=KEY_CONSUMPTION_DAILY,
+        icon="mdi:water-thermometer",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        suggested_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        unit_class=VolumeConverter.UNIT_CLASS,
+        value_fn=lambda data: data.daily_consumption,
+    ),
+    MEASUREMENT_TYPE_COLD_WATER: GoliashSensorEntityDescription(
+        key=KEY_CONSUMPTION_DAILY,
+        icon="mdi:water",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        suggested_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        unit_class=VolumeConverter.UNIT_CLASS,
+        value_fn=lambda data: data.daily_consumption,
+    ),
+    MEASUREMENT_TYPE_HEATING: GoliashSensorEntityDescription(
+        key=KEY_COST_UNITS_DAILY,
+        icon="mdi:radiator",
+        suggested_display_precision=0,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        unit_class="unitless",
+        value_fn=lambda data: data.daily_consumption,
+    ),
+}
+
 _LAST_MEASURED_SENSOR = GoliashSensorEntityDescription(
     key=KEY_LAST_MEASURED,
     icon="mdi:clock",
@@ -99,12 +135,19 @@ async def async_setup_entry(
     entities: list[GoliashBaseSensor] = []
     for device in coordinator.data.devices:
         # Create separate entity for each measurement type
-        if device.measurement_type in _MEASUREMENT_SENSORS:
+        if device.measurement_type in _TOTAL_CONSUMPTION_SENSORS:
             entities.append(
-                GoliashStatisticSensor(
+                GoliashTotalConsumptionSensor(
                     coordinator,
                     device,
-                    _MEASUREMENT_SENSORS[device.measurement_type],
+                    _TOTAL_CONSUMPTION_SENSORS[device.measurement_type],
+                )
+            )
+            entities.append(
+                GoliashDailyConsumptionSensor(
+                    coordinator,
+                    device,
+                    _DAILY_CONSUMPTION_SENSORS[device.measurement_type],
                 )
             )
         entities.append(
@@ -139,9 +182,9 @@ class GoliashBaseSensor(GoliashDeviceEntity, SensorEntity):
         return super()._handle_coordinator_update()
 
 
-class GoliashStatisticSensor(GoliashBaseSensor):
+class AbstractGoliashStatisticSensor(GoliashBaseSensor, ABC):
     """
-    Sensor entity that supports backfilling of historical statistics to the Recorder.
+    Abstract sensor class that supports backfilling of historical statistics to the Recorder.
     """
 
     @property
@@ -151,7 +194,7 @@ class GoliashStatisticSensor(GoliashBaseSensor):
             statistic_id=self.entity_id,
             source=RECORDER_DOMAIN,
             name=None,
-            has_sum=True,
+            has_sum=description.state_class == SensorStateClass.TOTAL_INCREASING,
             mean_type=description.mean_type,
             unit_class=description.unit_class,
             unit_of_measurement=description.native_unit_of_measurement,
@@ -180,20 +223,17 @@ class GoliashStatisticSensor(GoliashBaseSensor):
                 return
             last_sum = stat.get("sum") or 0.0
 
-        data = await self.coordinator.fetch_daily_statistics(self.device.id, since_date)
-        if not data:
-            return
-        inject_cumulative_sum(data, last_sum)
+        stats = await self._fetch_statistics(since_date, last_sum)
 
         _LOGGER.warning(
-            f"{self.entity_id}: Backfilling {len(data)} daily statistics since {since_date} (last sum was {last_sum})"
+            f"{self.entity_id}: Backfilling {len(stats)} daily statistics since {since_date} (last sum was {last_sum})"
         )
         # XXX: Import a short-term statistic entry to prime the recorder with the cumulative sum.
         #  This ensures that when Home Assistant's recorder automatically begins tracking this
         #  entity's state, it will correctly use the cumulative sum rather than calculating a new
         #  sum from individual state changes. This is a hack that uses an internal API, but I don't
         #  know any better way.
-        last_stat = data[-1].copy()
+        last_stat = stats[-1].copy()
         time = datetime.today() - timedelta(minutes=10)
         last_stat["start"] = time.replace(
             minute=floor(time.minute / 5) * 5, second=0, microsecond=0
@@ -209,4 +249,35 @@ class GoliashStatisticSensor(GoliashBaseSensor):
         #  valid entity_id, so the statistics are not linked to the sensor. Even if we accept that
         #  historical statistics are separate, HASS would still record statistics from state
         #  changes, causing data duplication.
-        async_import_statistics(self.hass, self.statistic_metadata, data)
+        async_import_statistics(self.hass, self.statistic_metadata, stats)
+
+    @abstractmethod
+    async def _fetch_statistics(
+        self, since_date: date, last_sum: float
+    ) -> list[StatisticData]: ...
+
+
+class GoliashTotalConsumptionSensor(AbstractGoliashStatisticSensor):
+    @override
+    async def _fetch_statistics(
+        self, since_date: date, last_sum: float
+    ) -> list[StatisticData]:
+        stats = await self.coordinator.fetch_daily_statistics(
+            self.device.id, since_date, cumulative=True
+        )
+        inject_cumulative_sum(stats, last_sum)
+        return stats
+
+
+class GoliashDailyConsumptionSensor(AbstractGoliashStatisticSensor):
+    @override
+    async def _fetch_statistics(
+        self, since_date: date, last_sum: float
+    ) -> list[StatisticData]:
+        stats = await self.coordinator.fetch_daily_statistics(
+            self.device.id, since_date, cumulative=False
+        )
+        for stat in stats:
+            last_sum += stat.get("state") or 0
+            stat["sum"] = last_sum
+        return stats

@@ -62,8 +62,14 @@
       "consumption_total": {
         "name": "Water consumption total"
       },
+      "consumption_daily": {
+        "name": "Water consumption daily"
+      },
       "cost_units_total": {
-        "name": "Heating cost units"
+        "name": "Heating cost units total"
+      },
+      "cost_units_daily": {
+        "name": "Heating cost units daily"
       },
       "last_measured": {
         "name": "Last measured"

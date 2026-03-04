@@ -57,7 +57,8 @@ This type of device exposes the following entities.
 
 | Name                    | Platform | Category   | Description                                                          |
 | ----------------------- | -------- | ---------- | -------------------------------------------------------------------- |
-| consumption_total       | Sensor   |            | Total water consumption in cubic meters (m³).                        |
+| consumption_total       | Sensor   |            | Total cumulative water consumption in cubic meters (m³).             |
+| consumption_daily       | Sensor   |            | Daily* (see the note below) water consumption in cubic meters (m³).  |
 | last_measured           | Sensor   | Diagnostic | Timestamp of the last successful reading from the meter.             |
 
 
@@ -70,8 +71,18 @@ This type of device exposes the following entities.
 
 | Name                    | Platform | Category   | Description                                                          |
 | ----------------------- | -------- | ---------- | -------------------------------------------------------------------- |
-| cost_units_total        | Sensor   |            | Total heating cost units.                                            |
+| cost_units_total        | Sensor   |            | Total cumulative heating cost units “consumption”.                   |
+| cost_units_daily        | Sensor   |            | Daily* (see the note below) heating cost units “consumption”.        |
 | last_measured           | Sensor   | Diagnostic | Timestamp of the last successful reading from the meter.             |
+
+
+> [!NOTE]
+> The `_daily` sensors do **not** represent consumption for a calendar day (midnight to midnight).
+> They show consumption between the last two meter readings, which may span irregular periods depending on when the meter reports (e.g. 2 AM
+to 2 AM and reports can be delayed).
+
+> [!TIP]
+> Always use `_total` sensors for the Energy dashboard and anything where accuracy matters; `_daily` sensors accumulate error over time when summed, as they are derived from differences between readings rather than the meter's actual cumulative value.
 
 
 ## License
