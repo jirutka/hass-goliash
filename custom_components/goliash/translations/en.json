@@ -40,6 +40,7 @@
       "invalid_update_interval": "Update interval must be between 1 and 24 hours"
     },
     "abort": {
+      "already_configured": "This building is already configured",
       "cannot_connect": "Failed to connect\n\nError: {error}",
       "invalid_auth": "Invalid email or password",
       "invalid_data": "Received invalid data from Goliash API\n\nSee logs for details and report it at {issues_url}.",

@@ -40,6 +40,7 @@
       "invalid_update_interval": "Interval aktualizace musí být mezi 1 a 24 hodinami"
     },
     "abort": {
+      "already_configured": "Tato budova již je nakonfigurovaná",
       "cannot_connect": "Nepodařilo se připojit\n\nChyba: {error}",
       "invalid_auth": "Neplatný e-mail nebo heslo",
       "invalid_data": "Přijata nevalidní data z Goliash API\n\nPro podrobnosti se podívejte do logů a nahlaste to na {issues_url}.",

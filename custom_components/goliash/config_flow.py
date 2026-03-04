@@ -142,6 +142,9 @@ class GoliashConfigFlow(ConfigFlow, domain=DOMAIN):
         if not (building := self._buildings.get(building_id)):
             return self._show_settings_form({CONF_BUILDING_ID: "invalid_building"})
 
+        await self.async_set_unique_id(f"building:{building_id}")  # pyright: ignore[reportUnusedCallResult]
+        self._abort_if_unique_id_configured()
+
         update_interval = cast(int, user_input[CONF_UPDATE_INTERVAL]) * 3600
 
         backfill_enabled = bool(user_input[CONF_BACKFILL_ENABLED])
