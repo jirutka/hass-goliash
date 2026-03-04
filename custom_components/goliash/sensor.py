@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import VolumeConverter
 
 from .const import (
-    KEY_CONST_UNITS_TOTAL,
+    KEY_COST_UNITS_TOTAL,
     KEY_CONSUMPTION_TOTAL,
     KEY_LAST_MEASURED,
     MEASUREMENT_TYPE_COLD_WATER,
@@ -70,7 +70,7 @@ _MEASUREMENT_SENSORS = {
         value_fn=lambda data: data.cumulative_total,
     ),
     MEASUREMENT_TYPE_HEATING: GoliashSensorEntityDescription(
-        key=KEY_CONST_UNITS_TOTAL,
+        key=KEY_COST_UNITS_TOTAL,
         icon="mdi:radiator",
         suggested_display_precision=0,
         state_class=SensorStateClass.TOTAL_INCREASING,

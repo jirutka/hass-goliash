@@ -29,7 +29,7 @@ CONF_BACKFILL_SINCE: Final = "backfill_since"
 
 # Keys used in descriptions and unique_id.
 KEY_CONSUMPTION_TOTAL: Final = "consumption_total"
-KEY_CONST_UNITS_TOTAL: Final = "cost_units_total"
+KEY_COST_UNITS_TOTAL: Final = "cost_units_total"
 KEY_LAST_MEASURED: Final = "last_measured"
 
 # Measurement types (measurementTypeString in Goliash API).
