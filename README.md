@@ -1,8 +1,6 @@
 # Goliash Integration
 <img src="https://raw.githubusercontent.com/jirutka/hass-goliash/master/custom_components/goliash/brand/logo.png" width="250px" align="right">
 
-[![GitHub Release][releases-shield]][releases]
-
 Home Assistant integration for [Goliash](https://app.goliash.cz) API.
 
 
@@ -97,9 +95,7 @@ to 2 AM and reports can be delayed).
 
 This project is licensed under the [MIT License].
 
-[releases]: https://github.com/jirutka/hass-goliash/releases
 [latest-release]: https://github.com/jirutka/hass-goliash/releases/latest
-[releases-shield]: https://img.shields.io/github/release/jirutka/hass-goliash.svg?style=flat-square
 [issues]: https://github.com/jirutka/hass-goliash/issues
 [HACS]: https://hacs.xyz/
 [my-hacs-repo]: https://my.home-assistant.io/redirect/hacs_repository/?owner=jirutka&repository=hass-goliash&category=Integration
